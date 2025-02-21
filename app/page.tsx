@@ -19,6 +19,10 @@ interface FilterOption {
   label: string;
 }
 
+interface ParsedInput {
+  data: string[];
+}
+
 const filterOptions: FilterOption[] = [
   { value: 'numbers', label: 'Numbers' },
   { value: 'alphabets', label: 'Alphabets' },
@@ -31,7 +35,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<FilterOption[]>([]);
 
-  const validateInput = (parsedInput: any): string | null => {
+  const validateInput = (parsedInput: ParsedInput): string | null => {
     if (!parsedInput.data) {
       return 'Input must contain a "data" property';
     }
@@ -63,10 +67,10 @@ export default function Home() {
     setResponse(null);
 
     try {
-      let parsedInput;
+      let parsedInput: ParsedInput;
       try {
         parsedInput = JSON.parse(jsonInput);
-      } catch (err) {
+      } catch {
         setError('Invalid JSON format. Please check your input syntax.');
         return;
       }
@@ -97,7 +101,7 @@ export default function Home() {
         { value: 'numbers', label: 'Numbers' },
         { value: 'highest_alphabet', label: 'Highest Alphabet' }
       ]);
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     }
   };
@@ -105,7 +109,7 @@ export default function Home() {
   const getFilteredResponse = () => {
     if (!response) return null;
 
-    const result: Partial<Record<keyof ApiResponse, any>> = {};
+    const result: Partial<Record<keyof ApiResponse, unknown>> = {};
     selectedFilters.forEach(filter => {
       if (response[filter.value]) {
         result[filter.value] = response[filter.value];
@@ -114,7 +118,7 @@ export default function Home() {
     return result;
   };
 
-  const formatFilteredResponse = (filteredData: any) => {
+  const formatFilteredResponse = (filteredData: Partial<Record<keyof ApiResponse, unknown>>) => {
     return Object.entries(filteredData).map(([key, value]) => (
       <div key={key} className="mb-2">
         <span className="font-semibold capitalize text-gray-700">{key.replace('_', ' ')}: </span>
@@ -141,13 +145,13 @@ export default function Home() {
                 id="jsonInput"
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                placeholder='Enter JSON (e.g., {"data": ["M", "1", "334", "4", "B"]})'
+                placeholder={'Enter JSON (e.g., {"data": ["M", "1", "334", "4", "B"]})'}
                 className="w-full p-4 border border-gray-200 rounded-lg font-mono text-sm min-h-[120px] 
                           focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all
                           text-gray-800 placeholder-gray-400 bg-white"
               />
               <p className="text-sm text-gray-500">
-              Array elements must be either numbers or single alphabets. Example: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">["A", "1", "B", "2"]</code>
+                Array elements must be either numbers or single alphabets. Example: <code className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">[&quot;A&quot;, &quot;1&quot;, &quot;B&quot;, &quot;2&quot;]</code>
               </p>
             </div>
             
@@ -195,7 +199,7 @@ export default function Home() {
               <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
                 <h3 className="text-sm font-medium text-gray-600 mb-3">Filtered Response</h3>
                 <div className="space-y-2 text-base">
-                  {formatFilteredResponse(getFilteredResponse())}
+                  {formatFilteredResponse(getFilteredResponse() || {})}
                 </div>
               </div>
             )}
